@@ -19,7 +19,7 @@ var generateNumber = function (min , max) {
 //  Функция генерирует уникальный аватар
 var generateAvatar = function (generatedAdverts) {
   var avatarNumber = generateNumber(1, 9);
-  var avatar = 'img/avatars/user' + avatarNumber + '.png';
+  var avatar = 'img/avatars/user0' + avatarNumber + '.png';
   if (generatedAdverts.length > 0) {
     for (var i = 0; i < generatedAdverts.length; i++) {
       if (avatar === generatedAdverts[i].author.avatar) {
@@ -189,5 +189,50 @@ var generateRandomAdverts = function (quantity) {
   return randomAdverts;
 };
 
+//  Функция отрисовывает метку
+var renderMark = function (advert, template) {
+  var pin = template.cloneNode(true);
+  var img = pin.querySelector('img');
 
-console.log(generateRandomAdverts(8));
+  pin.style.left = advert.location.x + 'px';
+  pin.style.top = advert.location.y + 'px';
+  img.src = advert.author.avatar;
+  img.alt = advert.offer.title;
+  return pin;
+};
+
+// Функция указывает реальные координаты с учетом ширины элемента
+var countRealLocation = function (pin) {
+  pin.style.left = parseInt(pin.style.left, 10) - Math.round((pin.offsetWidth / 2)) + 'px';
+  pin.style.top = parseInt(pin.style.top, 10) - pin.offsetHeight + 'px';
+  return pin;
+};
+
+//  Step 1 - генерируем массив с объяектами-объявлениями
+var adverts = generateRandomAdverts(8);
+console.log(adverts);
+
+// Step 2 - у блока .map убираем класс map-faded
+var map = document.querySelector('.map');
+map.classList.remove('map--faded');
+
+//  Step 3 - отрисовывем блок меток
+var mapPins = document.querySelector('.map__pins');
+var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
+
+var fragment = document.createDocumentFragment();
+for (var i = 0; i < adverts.length; i++) {
+  var renderedPin = renderMark(adverts[i], pinTemplate);
+  fragment.appendChild(renderedPin);
+}
+console.log(fragment);
+
+//  Step 4 - Добавляем отрисованные элементы в блок mapPins
+mapPins.appendChild(fragment);
+
+var pins = document.querySelectorAll('.map__pin');
+for (var j = 0; j < pins.length; j++) {
+  fragment.appendChild(countRealLocation(pins[i]));
+}
+mapPins.appendChild(fragment);
+
