@@ -9,6 +9,15 @@ var ADDRES_X_INT_MIN = 100;
 var ADDRES_X_INT_MAX = 500;
 var ADDRES_Y_INT_MIN = 130;
 var ADDRES_Y_INT_MAX = 630;
+var MAIN_PIN_WIDTH = 65;
+var MAIN_PIN_HEIGHT = 65;
+
+
+var map = document.querySelector('.map'); //  Карта объявления
+var adForm = document.querySelector('.ad-form');
+var adFieldsets = adForm.querySelectorAll('fieldset'); // Поля добавления объявления
+var mainPin = document.querySelector('.map__pin--main'); //  Главная метка
+var formAddress = document.querySelector('#address');
 
 
 //  Функция генерации целого числа
@@ -281,37 +290,65 @@ var rendeAdvertCard = function (advert, template) {
   return mapCard;
 };
 
+//  Функция дизейблит поля формы объявления
+var disableNotice = function () {
+  for (var i = 0; i < adFieldsets.length; i++) {
+    adFieldsets[i].setAttribute('disabled', 'disabled');
+  }
+};
 
-//  Step 1 - генерируем массив с объяектами-объявлениями
-var adverts = generateRandomAdverts(8);
+//  Функция раздизейблит поля формы объявления
+var enableNotice = function () {
+  adForm.classList.remove('ad-form--disabled');
+  for (var i = 0; i < adFieldsets.length; i++) {
+    adFieldsets[i].removeAttribute('disabled', 'disabled');
+  }
+};
 
-// Step 2 - у блока .map убираем класс map-faded
-var map = document.querySelector('.map');
-map.classList.remove('map--faded');
+//  Функция выполняет полный цикл гегерации и отрисовки объявлений
+var showAdverts = function () {
+  var adverts = generateRandomAdverts(8);
+  var mapPins = document.querySelector('.map__pins');
+  var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
 
-//  Step 3 - отрисовывем блок меток
-var mapPins = document.querySelector('.map__pins');
-var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
+  var fragment = document.createDocumentFragment();
+  for (var i = 0; i < adverts.length; i++) {
+    var renderedPin = renderMark(adverts[i], pinTemplate);
+    fragment.appendChild(renderedPin);
+  }
+  mapPins.appendChild(fragment);
 
-var fragment = document.createDocumentFragment();
-for (var i = 0; i < adverts.length; i++) {
-  var renderedPin = renderMark(adverts[i], pinTemplate);
-  fragment.appendChild(renderedPin);
-}
+  var pins = document.querySelectorAll('.map__pin');
+  for (var j = 0; j < pins.length; j++) {
+    fragment.appendChild(countRealLocation(pins[i]));
+  }
+  mapPins.appendChild(fragment);
+};
 
-//  Step 4 - Добавляем отрисованные элементы в блок mapPins
-mapPins.appendChild(fragment);
+//  Начало работы
 
-var pins = document.querySelectorAll('.map__pin');
-for (var j = 0; j < pins.length; j++) {
-  fragment.appendChild(countRealLocation(pins[i]));
-}
-mapPins.appendChild(fragment);
+//  На этапе загрузки стрвницы - Букинг должен быть неактивен. Дизейблим форму создания объявления
+disableNotice();
+
+//  Значение поля адрес должно быть заполнено всегда, даже если букинг неактивен
+//formAddress.value = countRealLocation(mainPin);
+
+
+//  При отпускание главного маркера - отрисовываем метки объвлений на карте, а также убираем дизейбл формы создания объявлений
+mainPin.addEventListener('mouseup', function () {
+  showAdverts();
+  enableNotice();
+  map.classList.remove('map--faded');
+});
+
+
+
 
 
 // Step 5 - Отрисовываем объявление первой метки
+/*
 var cardTemplate = document.querySelector('#card').content.querySelector('.map__card');
 var filtersContainer = document.querySelector('.map__filters-container');
-map.insertBefore(rendeAdvertCard(adverts[0], cardTemplate), filtersContainer);
+map.insertBefore(rendeAdvertCard(adverts[0], cardTemplate), filtersContainer);*/
 
 
