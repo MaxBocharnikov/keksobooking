@@ -320,9 +320,20 @@ var showAdverts = function () {
 
   var pins = document.querySelectorAll('.map__pin');
   for (var j = 0; j < pins.length; j++) {
-    fragment.appendChild(countRealLocation(pins[i]));
+    fragment.appendChild(countRealLocation(pins[j]));
   }
   mapPins.appendChild(fragment);
+};
+
+//  Функция передает значение полю Адрес в форме заполнения объявления, относительно от координат главного маркера (неактивное состояние)
+var setInActiveFormAddress = function () {
+  formAddress.value = (parseInt(mainPin.style.left, 10) + Math.round(MAIN_PIN_WIDTH / 2) + 'px') + ' '
+                      + (parseInt(mainPin.style.top, 10) + Math.round(MAIN_PIN_HEIGHT / 2) + 'px');
+};
+
+//  Функция передает значение полю Адрес в форме заполнения объявления, относительно от координат главного маркера (активное состояние)
+var setActiveFormAddress = function () {
+  formAddress.value = mainPin.style.left + ' ' + mainPin.style.top;
 };
 
 //  Начало работы
@@ -331,18 +342,15 @@ var showAdverts = function () {
 disableNotice();
 
 //  Значение поля адрес должно быть заполнено всегда, даже если букинг неактивен
-//formAddress.value = countRealLocation(mainPin);
-
+setInActiveFormAddress();
 
 //  При отпускание главного маркера - отрисовываем метки объвлений на карте, а также убираем дизейбл формы создания объявлений
 mainPin.addEventListener('mouseup', function () {
   showAdverts();
   enableNotice();
   map.classList.remove('map--faded');
+  setActiveFormAddress();
 });
-
-
-
 
 
 // Step 5 - Отрисовываем объявление первой метки
