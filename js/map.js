@@ -9,7 +9,19 @@ var ADDRES_X_INT_MIN = 100;
 var ADDRES_X_INT_MAX = 500;
 var ADDRES_Y_INT_MIN = 130;
 var ADDRES_Y_INT_MAX = 630;
+var MAIN_PIN_WIDTH = 65;
+var MAIN_PIN_HEIGHT = 65;
 
+
+var map = document.querySelector('.map'); //  Карта объявления
+var adForm = document.querySelector('.ad-form');
+var adFieldsets = adForm.querySelectorAll('fieldset'); // Поля добавления объявления
+var mainPin = document.querySelector('.map__pin--main'); //  Главная метка
+var formAddress = document.querySelector('#address'); //  Поле адреса из формы
+var mapPins = document.querySelector('.map__pins'); //  Карта
+var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin'); // Шаблон отрисовки метое
+var cardTemplate = document.querySelector('#card').content.querySelector('.map__card'); //  Шаблон отрисовки карточки объявления
+var filtersContainer = document.querySelector('.map__filters-container'); //  фильтры на карте
 
 //  Функция генерации целого числа
 var generateNumber = function (min, max) {
@@ -203,8 +215,10 @@ var renderMark = function (advert, template) {
 
 // Функция указывает реальные координаты с учетом ширины элемента
 var countRealLocation = function (pin) {
-  pin.style.left = parseInt(pin.style.left, 10) - Math.round((pin.offsetWidth / 2)) + 'px';
-  pin.style.top = parseInt(pin.style.top, 10) - pin.offsetHeight + 'px';
+  if (!pin.classList.contains('map__pin--main')) {
+    pin.style.left = parseInt(pin.style.left, 10) - Math.round((pin.offsetWidth / 2)) + 'px';
+    pin.style.top = parseInt(pin.style.top, 10) - pin.offsetHeight + 'px';
+  }
   return pin;
 };
 
@@ -281,37 +295,114 @@ var rendeAdvertCard = function (advert, template) {
   return mapCard;
 };
 
+//  Функция дизейблит поля формы объявления
+var disableNotice = function () {
+  for (var i = 0; i < adFieldsets.length; i++) {
+    adFieldsets[i].setAttribute('disabled', 'disabled');
+  }
+};
 
-//  Step 1 - генерируем массив с объяектами-объявлениями
-var adverts = generateRandomAdverts(8);
+//  Функция раздизейблит поля формы объявления
+var enableNotice = function () {
+  adForm.classList.remove('ad-form--disabled');
+  for (var i = 0; i < adFieldsets.length; i++) {
+    adFieldsets[i].removeAttribute('disabled', 'disabled');
+  }
+};
 
-// Step 2 - у блока .map убираем класс map-faded
-var map = document.querySelector('.map');
-map.classList.remove('map--faded');
+//  Функция удаляет объявления из карты
+var removeAdverts = function () {
+  var pins = document.querySelectorAll('.map__pin');
+  if (pins.length > 1) {
+    for (var i = 0; i < pins.length; i++) {
+      if (!pins[i].classList.contains('map__pin--main')) {
+        pins[i].remove();
+      }
+    }
+  }
+};
 
-//  Step 3 - отрисовывем блок меток
-var mapPins = document.querySelector('.map__pins');
-var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
+//  Функция удаляет текущую карточку метки
+var removeMapCard = function () {
+  var mapCard = document.querySelector('.map__card');
+  mapCard.remove();
+  document.removeEventListener('keydown', onPopupEscPress);
+};
 
-var fragment = document.createDocumentFragment();
-for (var i = 0; i < adverts.length; i++) {
-  var renderedPin = renderMark(adverts[i], pinTemplate);
-  fragment.appendChild(renderedPin);
-}
+//  Функция закрывает popup по нажатию на крестик
+var popupCloseHandler = function () {
+  var popupClose = document.querySelector('.popup__close');
+  popupClose.addEventListener('click', function () {
+    removeMapCard();
+  });
 
-//  Step 4 - Добавляем отрисованные элементы в блок mapPins
-mapPins.appendChild(fragment);
+};
 
-var pins = document.querySelectorAll('.map__pin');
-for (var j = 0; j < pins.length; j++) {
-  fragment.appendChild(countRealLocation(pins[i]));
-}
-mapPins.appendChild(fragment);
-
-
-// Step 5 - Отрисовываем объявление первой метки
-var cardTemplate = document.querySelector('#card').content.querySelector('.map__card');
-var filtersContainer = document.querySelector('.map__filters-container');
-map.insertBefore(rendeAdvertCard(adverts[0], cardTemplate), filtersContainer);
+//  По нажатию на esc закрываем карточку метки
+var onPopupEscPress = function (evt) {
+  if (evt.keyCode === 27) {
+    removeMapCard();
+  }
+};
 
 
+//  Функция отрисовывает карточку объявления
+var pinCartClickHandler = function (advert, pin) {
+  pin.addEventListener('click', function () {
+    var mapCard = document.querySelector('.map__card');
+    if (mapCard) { //  Проверяем, существует ли на странице отрисованная карточка; если да - удаляем ее
+      mapCard.remove();
+    }
+    map.insertBefore(rendeAdvertCard(advert, cardTemplate), filtersContainer);
+    popupCloseHandler();
+    document.addEventListener('keydown', onPopupEscPress);
+  });
+};
+
+//  Функция выполняет полный цикл гегерации и отрисовки объявлений
+var showAdverts = function () {
+  var adverts = generateRandomAdverts(8);
+  var fragment = document.createDocumentFragment();
+  for (var i = 0; i < adverts.length; i++) {
+    var renderedPin = renderMark(adverts[i], pinTemplate);
+    fragment.appendChild(renderedPin);
+  }
+  mapPins.appendChild(fragment);
+  // Перерисовываем согласно реальным координатам
+  var pins = document.querySelectorAll('.map__pin:not(.map__pin--main)');
+  for (var j = 0; j < pins.length; j++) {
+    fragment.appendChild(countRealLocation(pins[j]));
+    pinCartClickHandler(adverts[j], pins[j]); // Добавляем обработчик на клик по метке
+  }
+  mapPins.appendChild(fragment);
+};
+
+//  Функция передает значение полю Адрес в форме заполнения объявления, относительно от координат главного маркера (неактивное состояние)
+var setInActiveFormAddress = function () {
+  formAddress.value = (parseInt(mainPin.style.left, 10) + Math.round(MAIN_PIN_WIDTH / 2)) + ' '
+                      + (parseInt(mainPin.style.top, 10) + Math.round(MAIN_PIN_HEIGHT / 2));
+};
+
+//  Функция передает значение полю Адрес в форме заполнения объявления, относительно от координат главного маркера (активное состояние)
+var setActiveFormAddress = function () {
+  formAddress.value = (parseInt(mainPin.style.left, 10) + Math.round(MAIN_PIN_WIDTH / 2)) + ' '
+    + (parseInt(mainPin.style.top, 10) + MAIN_PIN_HEIGHT);
+};
+
+
+// НАЧАЛО РАБОТЫ
+
+//  На этапе загрузки стрвницы - Букинг должен быть неактивен. Дизейблим форму создания объявления
+disableNotice();
+
+//  Значение поля адрес должно быть заполнено всегда, даже если букинг неактивен
+setInActiveFormAddress();
+
+//  При отпускание главного маркера - удаляем старые метки, отрисовываем метки объвлений на карте, а также убираем дизейбл формы создания объявлений
+mainPin.addEventListener('mouseup', function () {
+  removeAdverts();
+  showAdverts();
+  enableNotice();
+  map.classList.remove('map--faded');
+  setActiveFormAddress();
+});
