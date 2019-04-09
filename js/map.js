@@ -22,7 +22,9 @@ var mapPins = document.querySelector('.map__pins'); //  Карта
 var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin'); // Шаблон отрисовки метое
 var cardTemplate = document.querySelector('#card').content.querySelector('.map__card'); //  Шаблон отрисовки карточки объявления
 var filtersContainer = document.querySelector('.map__filters-container'); //  фильтры на карте
-
+var roomQuantity = adForm.querySelector('#room_number');
+var capacity = adForm.querySelector('#capacity');
+var adFormSubmit = adForm.querySelector('.ad-form__submit');
 //  Функция генерации целого числа
 var generateNumber = function (min, max) {
   return Math.floor(Math.random() * (max - min) + min);
@@ -405,4 +407,13 @@ mainPin.addEventListener('mouseup', function () {
   enableNotice();
   map.classList.remove('map--faded');
   setActiveFormAddress();
+});
+
+//  Проверяем соответсвие кол-ва гостей и кол-ва комнат перед отправкой формы
+adFormSubmit.addEventListener('click', function () {
+  if (parseInt(roomQuantity.value, 10) < parseInt(capacity.value, 10)) {
+    roomQuantity.setCustomValidity('Количества комнат должно быть больше либо равно количестку гостей');
+  } else {
+    roomQuantity.setCustomValidity('');
+  }
 });
