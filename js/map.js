@@ -385,6 +385,7 @@ var setInActiveFormAddress = function () {
                       + (parseInt(mainPin.style.top, 10) + Math.round(MAIN_PIN_HEIGHT / 2));
 };
 
+
 //  Функция передает значение полю Адрес в форме заполнения объявления, относительно от координат главного маркера (активное состояние)
 var setActiveFormAddress = function () {
   formAddress.value = (parseInt(mainPin.style.left, 10) + Math.round(MAIN_PIN_WIDTH / 2)) + ' '
@@ -401,13 +402,47 @@ disableNotice();
 setInActiveFormAddress();
 
 //  При отпускание главного маркера - удаляем старые метки, отрисовываем метки объвлений на карте, а также убираем дизейбл формы создания объявлений
-mainPin.addEventListener('mouseup', function () {
+//  Также обрабатываем перемещение по странице
+var mouseDownHandler = function (downEvt) {
+  downEvt.preventDefault();
+
+  map.classList.remove('map--faded');
   removeAdverts();
   showAdverts();
   enableNotice();
   map.classList.remove('map--faded');
-  setActiveFormAddress();
-});
+
+  var currentCoords = {
+    x: downEvt.clientX,
+    y: downEvt.clientY
+  };
+  var mouseMoveHandler = function (moveEvt) {
+    moveEvt.preventDefault();
+    var shifted = {
+      x: moveEvt.clientX - currentCoords.x,
+      y: moveEvt.clientY - currentCoords.y
+    };
+    currentCoords = {
+      x: moveEvt.clientX,
+      y: moveEvt.clientY
+    };
+    mainPin.style.top = mainPin.offsetTop + shifted.y + 'px';
+    mainPin.style.left = mainPin.offsetLeft + shifted.x + 'px';
+    setActiveFormAddress();
+
+  };
+
+  var mouseUpHandler = function (upEvt) {
+    upEvt.preventDefault();
+    mainPin.removeEventListener('mouseup', mouseUpHandler);
+    map.removeEventListener('mousemove', mouseMoveHandler);
+    setActiveFormAddress();
+  };
+
+  map.addEventListener('mousemove', mouseMoveHandler);
+  mainPin.addEventListener('mouseup', mouseUpHandler);
+};
+mainPin.addEventListener('mousedown', mouseDownHandler);
 
 //  Проверяем соответсвие кол-ва гостей и кол-ва комнат перед отправкой формы
 adFormSubmit.addEventListener('click', function () {
@@ -417,3 +452,8 @@ adFormSubmit.addEventListener('click', function () {
     roomQuantity.setCustomValidity('');
   }
 });
+
+
+
+
+
