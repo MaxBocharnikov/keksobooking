@@ -25,6 +25,7 @@ var filtersContainer = document.querySelector('.map__filters-container'); //  ф
 var roomQuantity = adForm.querySelector('#room_number');
 var capacity = adForm.querySelector('#capacity');
 var adFormSubmit = adForm.querySelector('.ad-form__submit');
+var isActive = false; // отрисованы ли данные
 //  Функция генерации целого числа
 var generateNumber = function (min, max) {
   return Math.floor(Math.random() * (max - min) + min);
@@ -405,12 +406,13 @@ setInActiveFormAddress();
 //  Также обрабатываем перемещение по странице
 var mouseDownHandler = function (downEvt) {
   downEvt.preventDefault();
-
-  map.classList.remove('map--faded');
-  removeAdverts();
-  showAdverts();
-  enableNotice();
-  map.classList.remove('map--faded');
+  if (!isActive) {
+    map.classList.remove('map--faded');
+    removeAdverts();
+    showAdverts();
+    enableNotice();
+    isActive = true;
+  }
 
   var currentCoords = {
     x: downEvt.clientX,
@@ -440,7 +442,7 @@ var mouseDownHandler = function (downEvt) {
   };
 
   map.addEventListener('mousemove', mouseMoveHandler);
-  mainPin.addEventListener('mouseup', mouseUpHandler);
+  map.addEventListener('mouseup', mouseUpHandler);
 };
 mainPin.addEventListener('mousedown', mouseDownHandler);
 
@@ -452,8 +454,3 @@ adFormSubmit.addEventListener('click', function () {
     roomQuantity.setCustomValidity('');
   }
 });
-
-
-
-
-
