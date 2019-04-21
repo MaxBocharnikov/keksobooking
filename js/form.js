@@ -37,6 +37,35 @@
       adFieldsets[i].removeAttribute('disabled');
     }
   };
+
+  //  Колбэк на успешную отправку формы
+  var onSubmitSuccess = function () {
+    var template = document.querySelector('#error').content.cloneNode(true);
+    var error = template.querySelector('.error');
+    var errorMessage = error.querySelector('.error__message');
+    var gotit = error.querySelector('.error__button');
+    errorMessage.textContent = 'Данные успешно отправлены';
+    gotit.textContent = 'Понятно';
+    gotit.addEventListener('click', function () {
+      window.map.removeChild(error);
+    });
+    window.map.appendChild(error);
+    adForm.reset();
+  };
+
+  //  Коллбэк на ошибочную отправку формы
+  var onSubmitError = function (message) {
+    var template = document.querySelector('#error').content.cloneNode(true);
+    var error = template.querySelector('.error');
+    var errorMessage = error.querySelector('.error__message');
+    var tryAgain = error.querySelector('.error__button');
+    errorMessage.textContent = message;
+    tryAgain.addEventListener('click', function () {
+      window.map.removeChild(error);
+    });
+    window.map.appendChild(error);
+  };
+
   //  Проверяем соответсвие кол-ва гостей и кол-ва комнат перед отправкой формы
   adFormSubmit.addEventListener('click', function () {
     if (parseInt(roomQuantity.value, 10) < parseInt(capacity.value, 10)) {
@@ -45,5 +74,11 @@
       roomQuantity.setCustomValidity('');
     }
   });
+
+  adForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    window.save(new FormData(adForm), onSubmitSuccess, onSubmitError);
+  });
+
 })();
 

@@ -6,22 +6,16 @@
 
   //  Функция отрисовывает метку
   var renderMark = function (advert, template) {
+    var PIN_WIDTH = 50;
+    var PIN_HEIGHT = 70;
+
     var pin = template.cloneNode(true);
     var img = pin.querySelector('img');
 
-    pin.style.left = advert.location.x + 'px';
-    pin.style.top = advert.location.y + 'px';
+    pin.style.left = advert.location.x - Math.round(PIN_WIDTH / 2) + 'px';
+    pin.style.top = advert.location.y - PIN_HEIGHT + 'px';
     img.src = advert.author.avatar;
     img.alt = advert.offer.title;
-    return pin;
-  };
-
-  // Функция указывает реальные координаты с учетом ширины элемента
-  var countRealLocation = function (pin) {
-    if (!pin.classList.contains('map__pin--main')) {
-      pin.style.left = parseInt(pin.style.left, 10) - Math.round((pin.offsetWidth / 2)) + 'px';
-      pin.style.top = parseInt(pin.style.top, 10) - pin.offsetHeight + 'px';
-    }
     return pin;
   };
 
@@ -37,21 +31,31 @@
     }
   };
 
-  //  Функция выполняет полный цикл гегерации и отрисовки объявлений
-  window.showAdverts = function () {
-    var adverts = window.generateRandomAdverts(8);
+  var onLoadSuccess = function (adverts) {
     var fragment = document.createDocumentFragment();
     for (var i = 0; i < adverts.length; i++) {
       var renderedPin = renderMark(adverts[i], pinTemplate);
       fragment.appendChild(renderedPin);
+      window.pinCartClickHandler(adverts[i], renderedPin); // Добавляем обработчик на клик по метке
     }
     mapPins.appendChild(fragment);
-    // Перерисовываем согласно реальным координатам
-    var pins = document.querySelectorAll('.map__pin:not(.map__pin--main)');
-    for (var j = 0; j < pins.length; j++) {
-      fragment.appendChild(countRealLocation(pins[j]));
-      window.pinCartClickHandler(adverts[j], pins[j]); // Добавляем обработчик на клик по метке
-    }
-    mapPins.appendChild(fragment);
+  };
+
+  var onLoadError = function (message) {
+    var template = document.querySelector('#error').content.cloneNode(true);
+    var error = template.querySelector('.error');
+    var errorMessage = error.querySelector('.error__message');
+    var tryAgain = error.querySelector('.error__button');
+    errorMessage.textContent = message;
+    tryAgain.addEventListener('click', function () {
+      window.map.removeChild(error);
+      window.load(onLoadSuccess, onLoadError);
+    });
+    window.map.appendChild(error);
+  };
+
+  //  Функция выполняет полный цикл гегерации и отрисовки объявлений
+  window.showAdverts = function () {
+    window.load(onLoadSuccess, onLoadError);
   };
 })();
