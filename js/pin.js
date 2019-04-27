@@ -118,14 +118,18 @@
 
   //  Функция отрисовывает метки
   var renderMarks = function (adverts) {
+    var PINS_NUMBER = 5;
     var fragment = document.createDocumentFragment();
     for (var i = 0; i < adverts.length; i++) {
+      if (i === PINS_NUMBER) {
+        break;
+      }
       var renderedPin = renderMark(adverts[i], pinTemplate);
       fragment.appendChild(renderedPin);
       window.pinCartClickHandler(adverts[i], renderedPin); // Добавляем обработчик на клик по метке
     }
     mapPins.appendChild(fragment);
-  }
+  };
 
   //  Функция удаляет объявления из карты
   window.removeAdverts = function () {
@@ -163,11 +167,15 @@
     window.load(onLoadSuccess, onLoadError);
   };
 
-  // На любое изменения значения в форме, фильтруем значения
-  filterForm.addEventListener('change', function () {
+  // Функция применяющаяся на момент изменения в форме
+  var formChangeHandler = function () {
     var filteredAdverts = [];
     window.removeAdverts();
     filteredAdverts = filterAdverts(window.adverts);
     renderMarks(filteredAdverts);
+  };
+  // На любое изменения значения в форме, фильтруем значения
+  filterForm.addEventListener('change', function () {
+    window.debounce(formChangeHandler, 500);
   });
 })();
