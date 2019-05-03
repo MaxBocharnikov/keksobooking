@@ -9,7 +9,11 @@
   var roomQuantity = adForm.querySelector('#room_number');
   var capacity = adForm.querySelector('#capacity');
   var adFormSubmit = adForm.querySelector('.ad-form__submit');
-  var formAddress = document.querySelector('#address'); //  Поле адреса из формы
+  var formAddress = adForm.querySelector('#address'); //  Поле адреса из формы
+  var fileForm = adForm.querySelector('.ad-form__field input[type=file]');
+  var preview = adForm.querySelector('.ad-form-header__preview img');
+  var FILE_TYPES = ['jpg', 'png', 'jpeg', 'svg', 'gif'];
+
   //  Функция дизейблит поля формы объявления
   window.disableNotice = function () {
     for (var i = 0; i < adFieldsets.length; i++) {
@@ -72,6 +76,23 @@
       roomQuantity.setCustomValidity('Количества комнат должно быть больше либо равно количестку гостей');
     } else {
       roomQuantity.setCustomValidity('');
+    }
+  });
+
+  // На изменение в инпуте-файле подгружаем превью
+  fileForm.addEventListener('change', function () {
+    var file = fileForm.files[0];
+    var fileName = file.name.toLowerCase();
+    var marches = FILE_TYPES.some(function (type) {
+      return fileName.endsWith(type);
+    });
+
+    if (marches) {
+      var reader = new FileReader();
+      reader.addEventListener('load', function () {
+        preview.src = reader.result;
+      });
+      reader.readAsDataURL(file);
     }
   });
 
